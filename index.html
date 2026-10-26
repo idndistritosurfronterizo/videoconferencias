@@ -30,7 +30,7 @@
     }
 
     .logo {
-      width: 80px;
+      width: 90px;
       height: auto;
       object-fit: contain;
     }
@@ -146,19 +146,20 @@
     </section>
   </main>
 
-  <!-- Módulo de Firebase -->
+  <!-- Módulo de Firebase con tus credenciales -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-    // ⚠️ REEMPLAZA ESTOS DATOS CON TUS CREDENCIALES DE FIREBASE ⚠️
+    // Tus credenciales oficiales de Firebase
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_PROYECTO.firebaseapp.com",
-      projectId: "TU_PROYECTO_ID",
-      storageBucket: "TU_PROYECTO.appspot.com",
-      messagingSenderId: "TU_SENDER_ID",
-      appId: "TU_APP_ID"
+      apiKey: "AIzaSyDefoT18tEWUZm5elMlS9XoS8KULEMQW9o",
+      authDomain: "videoconferencia-bf1a6.firebaseapp.com",
+      projectId: "videoconferencia-bf1a6",
+      storageBucket: "videoconferencia-bf1a6.firebasestorage.app",
+      messagingSenderId: "449587586923",
+      appId: "1:449587586923:web:e594c0bb281252b6084e2e",
+      measurementId: "G-E6L78BXYDS"
     };
 
     // Inicializar Firebase y Firestore

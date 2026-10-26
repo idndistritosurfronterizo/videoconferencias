@@ -91,11 +91,21 @@
       align-items: center;
       padding: 0.8rem;
       border-bottom: 1px solid #edf2f7;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .actions {
       display: flex;
       gap: 8px;
+    }
+
+    .instructions-box {
+      background: #e2e8f0;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1.5rem;
+      font-size: 0.95rem;
     }
   </style>
 </head>
@@ -116,19 +126,24 @@
     <!-- Sección del Anfitrión -->
     <section class="card">
       <h2>Panel del Anfitrión</h2>
-      <p>Crea una nueva sala de conferencia para iniciar tu transmisión sin límites:</p>
+      <p>Crea una nueva sala de conferencia:</p>
       <div class="form-group">
-        <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Reunión Distrital)">
-        <button onclick="crearSala()">Crear e Iniciar Sala</button>
+        <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Reunión de Pastores)">
+        <button onclick="crearSala()">Crear Sala</button>
       </div>
     </section>
 
     <!-- Sección de Salas Disponibles para Usuarios -->
     <section class="card">
-      <h2>Salas Disponibles</h2>
+      <h2>Salas Activas</h2>
       <ul id="roomsList" class="rooms-list">
         <li>Cargando salas activas...</li>
       </ul>
+
+      <div class="instructions-box">
+        <strong>💡 Recomendación para tiempo ilimitado:</strong> 
+        Para evitar los límites de tiempo de los navegadores web en las llamadas grupales, se recomienda descargar la aplicación gratuita <strong>Jitsi Meet</strong> en tu celular o PC. Al hacer clic en unirse, copia el nombre de la sala e ingrésalo directamente en la app para reuniones de duración ilimitada.
+      </div>
     </section>
   </main>
 
@@ -152,7 +167,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Crear sala con un identificador único seguro y extenso para evitar límites de tiempo
+    // Crear sala y guardarla en la base de datos
     window.crearSala = async function() {
       const roomInput = document.getElementById('roomNameInput');
       const roomName = roomInput.value.trim();
@@ -162,10 +177,8 @@
         return;
       }
 
-      // Generar un sufijo alfanumérico aleatorio fuerte para evitar restricciones de tiempo en Jitsi
-      const randomString = Math.random().toString(36.25).substring(2, 10) + Math.random().toString(36.25).substring(2, 10);
       const cleanName = roomName.replace(/[^a-zA-Z0-9]/g, '_');
-      const roomId = `DistritoSurFronterizo_${cleanName}_${randomString}`;
+      const roomId = `DistritoSurFronterizo_${cleanName}_${Math.floor(Math.random() * 10000)}`;
 
       try {
         await addDoc(collection(db, "salas"), {
@@ -175,7 +188,7 @@
         });
 
         roomInput.value = '';
-        unirseASala(roomId, roomName);
+        alert('¡Sala creada con éxito! Ya aparece en la lista para todo el distrito.');
       } catch (e) {
         console.error("Error al crear la sala: ", e);
         alert("Error al conectar con la base de datos.");
@@ -200,9 +213,10 @@
 
           const li = document.createElement('li');
           li.innerHTML = `
-            <span><strong>${sala.titulo}</strong></span>
+            <span><strong>${sala.titulo}</strong><br><small style="color: #666;">Código: <code>${sala.id}</code></small></span>
             <div class="actions">
-              <button class="btn-join" onclick="unirseASala('${sala.id}', '${sala.titulo}')">Unirse</button>
+              <button class="btn-join" onclick="unirseASala('${sala.id}')">Unirse (Web)</button>
+              <button class="btn-join" style="background-color: #38a169;" onclick="copiarCodigo('${sala.id}')">Copiar Código App</button>
               <button class="btn-danger" onclick="eliminarSala('${docId}')">Eliminar</button>
             </div>
           `;
@@ -211,10 +225,19 @@
       });
     }
 
-    // Unirse a la videoconferencia en pestaña nueva
-    window.unirseASala = function(roomId, roomTitle) {
+    // Unirse mediante la web
+    window.unirseASala = function(roomId) {
       const urlJitsi = `https://meet.jit.si/${roomId}`;
       window.open(urlJitsi, '_blank');
+    };
+
+    // Copiar el código exacto para abrirlo en la App móvil o de escritorio sin límites
+    window.copiarCodigo = function(roomId) {
+      navigator.clipboard.writeText(roomId).then(() => {
+        alert('¡Código de sala copiado! Abre tu app de Jitsi Meet, pégalo y entra sin límite de tiempo.');
+      }).catch(err => {
+        prompt('Copia este código para tu app de Jitsi:', roomId);
+      });
     };
 
     // Eliminar la sala de la base de datos (se borra para todos)

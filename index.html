@@ -127,6 +127,9 @@
 
   <main class="container">
     <!-- Sección del Anfitrión -->
+    <script type="text/javascript">
+      // Sincronización de interfaz limpia
+    </script>
     <section class="card">
       <h2>Panel del Anfitrión</h2>
       <p>Crea una nueva sala de conferencia con tiempo 100% ilimitado:</p>
@@ -225,9 +228,10 @@
       });
     }
 
-    // Abrir la sala como participante estándar sin modo director
+    // Abrir la sala asegurando que el panel incluya retorno de video local
     window.unirseASala = function(roomId) {
-      const urlNinja = `https://vdo.ninja/?room=${roomId}`;
+      // El parámetro &showgrid ayuda a desplegar todas las fuentes de video activas juntas, incluyéndote a ti
+      const urlNinja = `https://vdo.ninja/?room=${roomId}&showgrid`;
       window.open(urlNinja, '_blank');
     };
 

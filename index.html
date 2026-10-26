@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Centro de Conferencias del Distrito Sur Fronterizo</title>
-  <!-- API oficial de Jitsi Meet -->
-  <script src="https://meet.jit.si/external_api.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -118,7 +116,7 @@
     <!-- Sección del Anfitrión -->
     <section class="card">
       <h2>Panel del Anfitrión</h2>
-      <p>Crea una nueva sala de conferencia para iniciar tu transmisión sin límites de tiempo:</p>
+      <p>Crea una nueva sala de conferencia para iniciar tu transmisión sin límites:</p>
       <div class="form-group">
         <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Estudio Bíblico)">
         <button onclick="crearSala()">Crear e Iniciar Sala</button>
@@ -210,10 +208,17 @@
       });
     }
 
-    // Unirse a una videoconferencia (abre directamente en Jitsi Meet en pestaña nueva para evitar límites de tiempo)
+    // Unirse a una videoconferencia asegurando apertura en navegador externo/app
     window.unirseASala = function(roomId, roomTitle) {
       const urlJitsi = `https://meet.jit.si/${roomId}`;
-      window.open(urlJitsi, '_blank');
+      // Forzar apertura en pestaña nueva del navegador móvil
+      const win = window.open(urlJitsi, '_blank');
+      if (win) {
+        win.focus();
+      } else {
+        // Si el navegador bloquea la ventana emergente, redirige directamente
+        window.location.href = urlJitsi;
+      }
     };
 
     // Eliminar la sala de la base de datos (se borra para todos)

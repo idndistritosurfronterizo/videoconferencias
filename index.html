@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Centro de Conferencias del Nazareno</title>
+  <title>Centro de Conferencias del Distrito Sur Fronterizo</title>
   <!-- API oficial de Jitsi Meet -->
   <script src="https://meet.jit.si/external_api.js"></script>
   <style>
@@ -20,6 +20,19 @@
       color: white;
       text-align: center;
       padding: 2rem 1rem;
+    }
+
+    .header-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      width: 80px;
+      height: auto;
+      object-fit: contain;
     }
 
     header h1 { margin: 0; font-size: 2rem; }
@@ -67,6 +80,8 @@
     .btn-danger { background-color: #e53e3e; }
     .btn-danger:hover { background-color: #c53030; }
 
+    .btn-join { background-color: #2b6cb0; margin-right: 5px; }
+
     .rooms-list {
       list-style: none;
       padding: 0;
@@ -80,6 +95,11 @@
       border-bottom: 1px solid #edf2f7;
     }
 
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
     .hidden { display: none; }
     #jitsiContainer { width: 100%; height: 500px; margin-top: 1rem; }
   </style>
@@ -87,8 +107,14 @@
 <body>
 
   <header>
-    <h1>⛪ Centro de Conferencias del Nazareno</h1>
-    <p>Plataforma de Videoconferencias y Reuniones Virtuales</p>
+    <div class="header-content">
+      <!-- Logo de la Iglesia del Nazareno -->
+      <img src="NAZ-removebg-preview.png" alt="Logo Iglesia del Nazareno" class="logo">
+      <div>
+        <h1>Centro de Conferencias del Distrito Sur Fronterizo</h1>
+        <p>Plataforma de Videoconferencias y Reuniones Virtuales</p>
+      </div>
+    </div>
   </header>
 
   <main class="container">
@@ -106,7 +132,7 @@
     <section class="card">
       <h2>Salas Disponibles</h2>
       <ul id="roomsList" class="rooms-list">
-        <!-- Las salas activas se irán agregando aquí -->
+        <li>Cargando salas activas...</li>
       </ul>
     </section>
 
@@ -120,11 +146,29 @@
     </section>
   </main>
 
-  <script>
-    let api = null;
-    let salasActivas = [];
+  <!-- Módulo de Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    function crearSala() {
+    // ⚠️ REEMPLAZA ESTOS DATOS CON TUS CREDENCIALES DE FIREBASE ⚠️
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_PROYECTO.firebaseapp.com",
+      projectId: "TU_PROYECTO_ID",
+      storageBucket: "TU_PROYECTO.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+
+    // Inicializar Firebase y Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let api = null;
+
+    // Crear sala y guardarla en la base de datos
+    window.crearSala = async function() {
       const roomInput = document.getElementById('roomNameInput');
       const roomName = roomInput.value.trim();
 
@@ -135,32 +179,52 @@
 
       const roomId = 'Nazareno_' + roomName.replace(/\s+/g, '_') + '_' + Math.floor(Math.random() * 1000);
 
-      salasActivas.push({ titulo: roomName, id: roomId });
-      actualizarListaSalas();
-      unirseASala(roomId, roomName);
-      roomInput.value = '';
-    }
+      try {
+        await addDoc(collection(db, "salas"), {
+          titulo: roomName,
+          id: roomId,
+          creado: new Date()
+        });
 
-    function actualizarListaSalas() {
-      const listElement = document.getElementById('roomsList');
-      listElement.innerHTML = '';
-
-      if (salasActivas.length === 0) {
-        listElement.innerHTML = '<li>No hay salas activas en este momento.</li>';
-        return;
+        roomInput.value = '';
+        unirseASala(roomId, roomName);
+      } catch (e) {
+        console.error("Error al crear la sala: ", e);
+        alert("Error al conectar con la base de datos.");
       }
+    };
 
-      salasActivas.forEach(sala => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span><strong>${sala.titulo}</strong></span>
-          <button onclick="unirseASala('${sala.id}', '${sala.titulo}')">Unirse a la Conferencia</button>
-        `;
-        listElement.appendChild(li);
+    // Escuchar cambios en la base de datos en tiempo real
+    function escucharSalas() {
+      const listElement = document.getElementById('roomsList');
+
+      onSnapshot(collection(db, "salas"), (snapshot) => {
+        listElement.innerHTML = '';
+        
+        if (snapshot.empty) {
+          listElement.innerHTML = '<li>No hay salas activas en este momento.</li>';
+          return;
+        }
+
+        snapshot.forEach((docSnap) => {
+          const sala = docSnap.data();
+          const docId = docSnap.id;
+
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <span><strong>${sala.titulo}</strong></span>
+            <div class="actions">
+              <button class="btn-join" onclick="unirseASala('${sala.id}', '${sala.titulo}')">Unirse</button>
+              <button class="btn-danger" onclick="eliminarSala('${docId}')">Eliminar</button>
+            </div>
+          `;
+          listElement.appendChild(li);
+        });
       });
     }
 
-    function unirseASala(roomId, roomTitle) {
+    // Unirse a una videoconferencia de Jitsi
+    window.unirseASala = function(roomId, roomTitle) {
       const domain = 'meet.jit.si';
       const container = document.querySelector('#jitsiContainer');
       
@@ -180,17 +244,30 @@
       };
 
       api = new JitsiMeetExternalAPI(domain, options);
-    }
+    };
 
-    function salirDeSala() {
+    // Eliminar la sala de la base de datos (se borra para todos)
+    window.eliminarSala = async function(docId) {
+      if (confirm('¿Estás seguro de que deseas eliminar esta sala? Se quitará para todos los usuarios.')) {
+        try {
+          await deleteDoc(doc(db, "salas", docId));
+        } catch (e) {
+          console.error("Error al borrar la sala: ", e);
+        }
+      }
+    };
+
+    // Salir de la sala actual de la vista local
+    window.salirDeSala = function() {
       if (api) {
         api.dispose();
         api = null;
       }
       document.getElementById('meetSection').classList.add('hidden');
-    }
+    };
 
-    actualizarListaSalas();
+    // Iniciar escucha en tiempo real
+    escucharSalas();
   </script>
 </body>
 </html>

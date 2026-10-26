@@ -118,7 +118,7 @@
       <h2>Panel del Anfitrión</h2>
       <p>Crea una nueva sala de conferencia para iniciar tu transmisión sin límites:</p>
       <div class="form-group">
-        <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Estudio Bíblico)">
+        <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Reunión Distrital)">
         <button onclick="crearSala()">Crear e Iniciar Sala</button>
       </div>
     </section>
@@ -152,7 +152,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Crear sala y guardarla en la base de datos
+    // Crear sala con un identificador único seguro y extenso para evitar límites de tiempo
     window.crearSala = async function() {
       const roomInput = document.getElementById('roomNameInput');
       const roomName = roomInput.value.trim();
@@ -162,7 +162,10 @@
         return;
       }
 
-      const roomId = 'Nazareno_' + roomName.replace(/\s+/g, '_') + '_' + Math.floor(Math.random() * 1000);
+      // Generar un sufijo alfanumérico aleatorio fuerte para evitar restricciones de tiempo en Jitsi
+      const randomString = Math.random().toString(36.25).substring(2, 10) + Math.random().toString(36.25).substring(2, 10);
+      const cleanName = roomName.replace(/[^a-zA-Z0-9]/g, '_');
+      const roomId = `DistritoSurFronterizo_${cleanName}_${randomString}`;
 
       try {
         await addDoc(collection(db, "salas"), {
@@ -208,17 +211,10 @@
       });
     }
 
-    // Unirse a una videoconferencia asegurando apertura en navegador externo/app
+    // Unirse a la videoconferencia en pestaña nueva
     window.unirseASala = function(roomId, roomTitle) {
       const urlJitsi = `https://meet.jit.si/${roomId}`;
-      // Forzar apertura en pestaña nueva del navegador móvil
-      const win = window.open(urlJitsi, '_blank');
-      if (win) {
-        win.focus();
-      } else {
-        // Si el navegador bloquea la ventana emergente, redirige directamente
-        window.location.href = urlJitsi;
-      }
+      window.open(urlJitsi, '_blank');
     };
 
     // Eliminar la sala de la base de datos (se borra para todos)

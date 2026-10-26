@@ -165,7 +165,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Crear sala WebRTC Ilimitada (VDO.Ninja)
+    // Crear sala WebRTC Ilimitada
     window.crearSala = async function() {
       const roomInput = document.getElementById('roomNameInput');
       const roomName = roomInput.value.trim();
@@ -175,7 +175,6 @@
         return;
       }
 
-      // Nombre único seguro de sala para VDO.Ninja
       const cleanName = roomName.replace(/[^a-zA-Z0-9]/g, '');
       const roomId = `DistritoSur_${cleanName}_${Math.floor(Math.random() * 100000)}`;
 
@@ -226,10 +225,9 @@
       });
     }
 
-    // Abrir la sala ilimitada en VDO.Ninja (Room Mode)
+    // Abrir la sala como participante estándar sin modo director
     window.unirseASala = function(roomId) {
-      // Enlace directo en modo sala grupal con cámara/micrófono habilitados
-      const urlNinja = `https://vdo.ninja/?room=${roomId}&push&director`;
+      const urlNinja = `https://vdo.ninja/?room=${roomId}`;
       window.open(urlNinja, '_blank');
     };
 

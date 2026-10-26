@@ -99,9 +99,6 @@
       display: flex;
       gap: 8px;
     }
-
-    .hidden { display: none; }
-    #jitsiContainer { width: 100%; height: 500px; margin-top: 1rem; }
   </style>
 </head>
 <body>
@@ -121,7 +118,7 @@
     <!-- Sección del Anfitrión -->
     <section class="card">
       <h2>Panel del Anfitrión</h2>
-      <p>Crea una nueva sala de conferencia para iniciar tu transmisión:</p>
+      <p>Crea una nueva sala de conferencia para iniciar tu transmisión sin límites de tiempo:</p>
       <div class="form-group">
         <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Estudio Bíblico)">
         <button onclick="crearSala()">Crear e Iniciar Sala</button>
@@ -135,18 +132,9 @@
         <li>Cargando salas activas...</li>
       </ul>
     </section>
-
-    <!-- Contenedor del Video de la Conferencia -->
-    <section id="meetSection" class="card hidden">
-      <div class="meet-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 id="currentRoomTitle">Conferencia Activa</h3>
-        <button class="btn-danger" onclick="salirDeSala()">Salir de la Sala</button>
-      </div>
-      <div id="jitsiContainer"></div>
-    </section>
   </main>
 
-  <!-- Módulo de Firebase con tus credenciales -->
+  <!-- Módulo de Firebase y Lógica -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
@@ -165,8 +153,6 @@
     // Inicializar Firebase y Firestore
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
-    let api = null;
 
     // Crear sala y guardarla en la base de datos
     window.crearSala = async function() {
@@ -224,27 +210,10 @@
       });
     }
 
-    // Unirse a una videoconferencia de Jitsi
+    // Unirse a una videoconferencia (abre directamente en Jitsi Meet en pestaña nueva para evitar límites de tiempo)
     window.unirseASala = function(roomId, roomTitle) {
-      const domain = 'meet.jit.si';
-      const container = document.querySelector('#jitsiContainer');
-      
-      if (api) {
-        api.dispose();
-      }
-
-      document.getElementById('meetSection').classList.remove('hidden');
-      document.getElementById('currentRoomTitle').innerText = 'Conectado a: ' + roomTitle;
-
-      const options = {
-        roomName: roomId,
-        width: '100%',
-        height: 500,
-        parentNode: container,
-        lang: 'es'
-      };
-
-      api = new JitsiMeetExternalAPI(domain, options);
+      const urlJitsi = `https://meet.jit.si/${roomId}`;
+      window.open(urlJitsi, '_blank');
     };
 
     // Eliminar la sala de la base de datos (se borra para todos)
@@ -256,15 +225,6 @@
           console.error("Error al borrar la sala: ", e);
         }
       }
-    };
-
-    // Salir de la sala actual de la vista local
-    window.salirDeSala = function() {
-      if (api) {
-        api.dispose();
-        api = null;
-      }
-      document.getElementById('meetSection').classList.add('hidden');
     };
 
     // Iniciar escucha en tiempo real

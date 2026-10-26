@@ -100,12 +100,15 @@
       gap: 8px;
     }
 
-    .instructions-box {
-      background: #e2e8f0;
-      padding: 1rem;
-      border-radius: 6px;
-      margin-top: 1.5rem;
-      font-size: 0.95rem;
+    .info-badge {
+      background-color: #c6f6d5;
+      color: #22543d;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -117,7 +120,7 @@
       <img src="NAZ-removebg-preview.png" alt="Logo Iglesia del Nazareno" class="logo">
       <div>
         <h1>Centro de Conferencias del Distrito Sur Fronterizo</h1>
-        <p>Plataforma de Videoconferencias y Reuniones Virtuales</p>
+        <p>Plataforma de Videoconferencias y Reuniones Virtuales Ilimitadas</p>
       </div>
     </div>
   </header>
@@ -126,10 +129,10 @@
     <!-- Sección del Anfitrión -->
     <section class="card">
       <h2>Panel del Anfitrión</h2>
-      <p>Crea una nueva sala de conferencia:</p>
+      <p>Crea una nueva sala de conferencia con tiempo 100% ilimitado:</p>
       <div class="form-group">
-        <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Reunión de Pastores)">
-        <button onclick="crearSala()">Crear Sala</button>
+        <input type="text" id="roomNameInput" placeholder="Nombre o Tema de la Sala (ej. Asamblea Distrital)">
+        <button onclick="crearSala()">Crear Sala Ilimitada</button>
       </div>
     </section>
 
@@ -139,11 +142,6 @@
       <ul id="roomsList" class="rooms-list">
         <li>Cargando salas activas...</li>
       </ul>
-
-      <div class="instructions-box">
-        <strong>💡 Recomendación para tiempo ilimitado:</strong> 
-        Para evitar los límites de tiempo de los navegadores web en las llamadas grupales, se recomienda descargar la aplicación gratuita <strong>Jitsi Meet</strong> en tu celular o PC. Al hacer clic en unirse, copia el nombre de la sala e ingrésalo directamente en la app para reuniones de duración ilimitada.
-      </div>
     </section>
   </main>
 
@@ -152,7 +150,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-    // Tus credenciales oficiales de Firebase
+    // Credenciales oficiales de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDefoT18tEWUZm5elMlS9XoS8KULEMQW9o",
       authDomain: "videoconferencia-bf1a6.firebaseapp.com",
@@ -167,7 +165,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Crear sala y guardarla en la base de datos
+    // Crear sala WebRTC Ilimitada (VDO.Ninja)
     window.crearSala = async function() {
       const roomInput = document.getElementById('roomNameInput');
       const roomName = roomInput.value.trim();
@@ -177,8 +175,9 @@
         return;
       }
 
-      const cleanName = roomName.replace(/[^a-zA-Z0-9]/g, '_');
-      const roomId = `DistritoSurFronterizo_${cleanName}_${Math.floor(Math.random() * 10000)}`;
+      // Nombre único seguro de sala para VDO.Ninja
+      const cleanName = roomName.replace(/[^a-zA-Z0-9]/g, '');
+      const roomId = `DistritoSur_${cleanName}_${Math.floor(Math.random() * 100000)}`;
 
       try {
         await addDoc(collection(db, "salas"), {
@@ -188,14 +187,14 @@
         });
 
         roomInput.value = '';
-        alert('¡Sala creada con éxito! Ya aparece en la lista para todo el distrito.');
+        unirseASala(roomId);
       } catch (e) {
         console.error("Error al crear la sala: ", e);
         alert("Error al conectar con la base de datos.");
       }
     };
 
-    // Escuchar cambios en la base de datos en tiempo real
+    // Escuchar cambios en tiempo real
     function escucharSalas() {
       const listElement = document.getElementById('roomsList');
 
@@ -213,10 +212,12 @@
 
           const li = document.createElement('li');
           li.innerHTML = `
-            <span><strong>${sala.titulo}</strong><br><small style="color: #666;">Código: <code>${sala.id}</code></small></span>
+            <div>
+              <strong>${sala.titulo}</strong><br>
+              <span class="info-badge">Tiempo Ilimitado (WebRTC)</span>
+            </div>
             <div class="actions">
-              <button class="btn-join" onclick="unirseASala('${sala.id}')">Unirse (Web)</button>
-              <button class="btn-join" style="background-color: #38a169;" onclick="copiarCodigo('${sala.id}')">Copiar Código App</button>
+              <button class="btn-join" onclick="unirseASala('${sala.id}')">Unirse a la Conferencia</button>
               <button class="btn-danger" onclick="eliminarSala('${docId}')">Eliminar</button>
             </div>
           `;
@@ -225,22 +226,14 @@
       });
     }
 
-    // Unirse mediante la web
+    // Abrir la sala ilimitada en VDO.Ninja (Room Mode)
     window.unirseASala = function(roomId) {
-      const urlJitsi = `https://meet.jit.si/${roomId}`;
-      window.open(urlJitsi, '_blank');
+      // Enlace directo en modo sala grupal con cámara/micrófono habilitados
+      const urlNinja = `https://vdo.ninja/?room=${roomId}&push&director`;
+      window.open(urlNinja, '_blank');
     };
 
-    // Copiar el código exacto para abrirlo en la App móvil o de escritorio sin límites
-    window.copiarCodigo = function(roomId) {
-      navigator.clipboard.writeText(roomId).then(() => {
-        alert('¡Código de sala copiado! Abre tu app de Jitsi Meet, pégalo y entra sin límite de tiempo.');
-      }).catch(err => {
-        prompt('Copia este código para tu app de Jitsi:', roomId);
-      });
-    };
-
-    // Eliminar la sala de la base de datos (se borra para todos)
+    // Eliminar la sala en tiempo real
     window.eliminarSala = async function(docId) {
       if (confirm('¿Estás seguro de que deseas eliminar esta sala? Se quitará para todos los usuarios.')) {
         try {
@@ -251,7 +244,7 @@
       }
     };
 
-    // Iniciar escucha en tiempo real
+    // Iniciar escucha
     escucharSalas();
   </script>
 </body>
